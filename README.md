@@ -2,4 +2,4 @@ MAKE SURE THOSE FILES ARE SAVED AS C#   AKA CS            dont think they upload
 EXAMPLE
 Resourcename.cs
 Over 300 Unique Features 
-3D Player Inventory System With Item Drop And Pick /  Stack Modifer / Item Stack /  Player Health  /  Player Damage
+3D Player Inventory System With Item Drop And Pickup /  Stack Modifer / Item Stack /  Player Health  /  Player Damage
