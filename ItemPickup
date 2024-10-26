@@ -1,0 +1,11 @@
+using UnityEngine;
+
+public class ItemPickup : MonoBehaviour
+{
+    [SerializeField] private InventoryItem item;
+
+    public InventoryItem GetItem()
+    {
+        return item;
+    }
+}
