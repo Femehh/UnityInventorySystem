@@ -1,0 +1,101 @@
+using UnityEngine;
+using System.Collections.Generic;
+
+[System.Serializable]
+public class InventoryItem
+{
+    public string itemName;
+    public int quantity;
+    public Sprite icon;
+    public bool isStackable;
+    public GameObject itemPrefab;
+}
+
+public class InventorySystem : MonoBehaviour
+{
+    [Header("Inventory Settings")]
+    [SerializeField] private int maxInventorySize = 20;
+    [SerializeField] private List<InventoryItem> items = new List<InventoryItem>();
+
+    [Header("UI Settings")]
+    [SerializeField] private GameObject inventoryUI;
+    [SerializeField] private GameObject itemSlotPrefab;
+
+    [Header("Pickup Settings")]
+    [SerializeField] private LayerMask pickupLayer;
+    [SerializeField] private float pickupRange = 3f;
+
+    [Header("Drop Settings")]
+    [SerializeField] private Transform dropPoint;
+    [SerializeField] private float dropForce = 5f;
+
+    // Configurable events
+    [Header("Inventory Events")]
+    public UnityEngine.Events.UnityEvent onInventoryOpen;
+    public UnityEngine.Events.UnityEvent onInventoryClose;
+    public UnityEngine.Events.UnityEvent onItemPickup;
+    public UnityEngine.Events.UnityEvent onItemDrop;
+
+    private bool isInventoryOpen = false;
+
+    void Update()
+    {
+        HandleInventoryInput();
+        HandlePickup();
+    }
+
+    private void HandleInventoryInput()
+    {
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            isInventoryOpen = !isInventoryOpen;
+            inventoryUI.SetActive(isInventoryOpen);
+            if (isInventoryOpen) onInventoryOpen.Invoke();
+            else onInventoryClose.Invoke();
+        }
+    }
+
+    private void HandlePickup()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, transform.forward, out hit, pickupRange, pickupLayer))
+            {
+                InventoryItem item = hit.collider.GetComponent<ItemPickup>()?.GetItem();
+                if (item != null)
+                {
+                    AddItemToInventory(item);
+                    onItemPickup.Invoke();
+                    Destroy(hit.collider.gameObject);
+                }
+            }
+        }
+    }
+
+    public void AddItemToInventory(InventoryItem newItem)
+    {
+        InventoryItem existingItem = items.Find(i => i.itemName == newItem.itemName && i.isStackable);
+        
+        if (existingItem != null)
+        {
+            existingItem.quantity += newItem.quantity;
+        }
+        else if (items.Count < maxInventorySize)
+        {
+            items.Add(newItem);
+        }
+    }
+
+    public void DropItem(InventoryItem item)
+    {
+        if (items.Contains(item))
+        {
+            items.Remove(item);
+            GameObject droppedItem = Instantiate(item.itemPrefab, dropPoint.position, Quaternion.identity);
+            Rigidbody rb = droppedItem.AddComponent<Rigidbody>();
+            rb.AddForce(transform.forward * dropForce, ForceMode.Impulse);
+            onItemDrop.Invoke();
+        }
+    }
+}
